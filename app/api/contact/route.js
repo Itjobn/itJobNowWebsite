@@ -7,148 +7,148 @@ import { Resend } from "resend";
 // Sends an email via Resend to CONTACT_TO/EMAIL_FROM (plus a hardcoded admin inbox)
 
 export async function POST(request) {
-    try {
-        const body = await request.json();
-        const {
-            fullName = "",
-            email = "",
-            phoneNumber = "",
-            subject = "",
-            description = "",
-        } = body ?? {};
+  try {
+    const body = await request.json();
+    const {
+      fullName = "",
+      email = "",
+      phoneNumber = "",
+      subject = "",
+      description = "",
+    } = body ?? {};
 
-        // Basic validation
-        if (!fullName || !email || !subject || !description) {
-            return new Response(
-                JSON.stringify({ error: "Missing required fields" }),
-                { status: 400, headers: { "Content-Type": "application/json" } }
-            );
-        }
-
-        const resendApiKey = process.env.RESEND_API_KEY;
-        if (!resendApiKey) {
-            return new Response(
-                JSON.stringify({ error: "RESEND_API_KEY not configured" }),
-                { status: 500, headers: { "Content-Type": "application/json" } }
-            );
-        }
-
-        const resend = new Resend(resendApiKey);
-
-        // From: If EMAIL_FROM is not set, use Resend test domain for dev
-        const fromAddress = process.env.EMAIL_FROM?.trim() || "onboarding@resend.dev";
-
-        // Always send to the main recipient inbox
-        const adminAddress = "sigidevelopers@gmail.com";
-        // Additionally allow env-configured recipients (optional)
-        const optionalRecipient1 = process.env.CONTACT_TO?.trim();
-        const optionalRecipient2 = process.env.EMAIL_FROM?.trim();
-        const adminRecipients = Array.from(
-            new Set([adminAddress, optionalRecipient1, optionalRecipient2].filter(Boolean))
-        );
-
-        const emailSubject = subject || "New Contact Form Submission";
-
-        // Build templates (text + HTML) safely
-        const { admin, user } = renderContactTemplates({
-            fullName,
-            email,
-            phoneNumber,
-            subject,
-            description,
-        });
-
-        // 1) Send to admins/inbox
-        const { data: adminData, error: adminError } = await resend.emails.send({
-            from: fromAddress,
-            to: adminRecipients,
-            reply_to: email, // so you can reply directly to the sender
-            subject: `[Contact] ${emailSubject}`,
-            text: admin.text,
-            html: admin.html,
-        });
-
-        if (adminError) {
-            return new Response(
-                JSON.stringify({
-                    error: adminError.message || "Failed to send admin email",
-                }),
-                { status: 500, headers: { "Content-Type": "application/json" } }
-            );
-        }
-
-        // 2) Send a copy/confirmation to the user who submitted the form
-        let userEmailId = null;
-        let userEmailError = null;
-        try {
-            const userRes = await resend.emails.send({
-                from: fromAddress,
-                to: [email],
-                subject: `We received your message: ${emailSubject}`,
-                text: user.text,
-                html: user.html,
-            });
-            userEmailId = userRes?.data?.id || null;
-        } catch (userErr) {
-            userEmailError =
-                userErr?.message || "Failed to send confirmation to user";
-            console.error("Failed to send confirmation to user:", userEmailError);
-        }
-
-        return new Response(
-            JSON.stringify({
-                success: true,
-                adminEmailId: adminData?.id || null,
-                userEmailId,
-                userEmailSent: Boolean(userEmailId) && !userEmailError,
-                userEmailError,
-            }),
-            { status: 200, headers: { "Content-Type": "application/json" } }
-        );
-    } catch (err) {
-        return new Response(
-            JSON.stringify({
-                error:
-                    err?.message || "Unexpected error while sending contact form email",
-            }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
-        );
+    // Basic validation
+    if (!fullName || !email || !subject || !description) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
     }
+
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (!resendApiKey) {
+      return new Response(
+        JSON.stringify({ error: "RESEND_API_KEY not configured" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const resend = new Resend(resendApiKey);
+
+    // From: If EMAIL_FROM is not set, use Resend test domain for dev
+    const fromAddress = process.env.EMAIL_FROM?.trim() || "onboarding@resend.dev";
+
+    // Always send to the main recipient inbox
+    const adminAddress = "itjobn@gmail.com";
+    // Additionally allow env-configured recipients (optional)
+    const optionalRecipient1 = process.env.CONTACT_TO?.trim();
+    const optionalRecipient2 = process.env.EMAIL_FROM?.trim();
+    const adminRecipients = Array.from(
+      new Set([adminAddress, optionalRecipient1, optionalRecipient2].filter(Boolean))
+    );
+
+    const emailSubject = subject || "New Contact Form Submission";
+
+    // Build templates (text + HTML) safely
+    const { admin, user } = renderContactTemplates({
+      fullName,
+      email,
+      phoneNumber,
+      subject,
+      description,
+    });
+
+    // 1) Send to admins/inbox
+    const { data: adminData, error: adminError } = await resend.emails.send({
+      from: fromAddress,
+      to: adminRecipients,
+      reply_to: email, // so you can reply directly to the sender
+      subject: `[Contact] ${emailSubject}`,
+      text: admin.text,
+      html: admin.html,
+    });
+
+    if (adminError) {
+      return new Response(
+        JSON.stringify({
+          error: adminError.message || "Failed to send admin email",
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // 2) Send a copy/confirmation to the user who submitted the form
+    let userEmailId = null;
+    let userEmailError = null;
+    try {
+      const userRes = await resend.emails.send({
+        from: fromAddress,
+        to: [email],
+        subject: `We received your message: ${emailSubject}`,
+        text: user.text,
+        html: user.html,
+      });
+      userEmailId = userRes?.data?.id || null;
+    } catch (userErr) {
+      userEmailError =
+        userErr?.message || "Failed to send confirmation to user";
+      console.error("Failed to send confirmation to user:", userEmailError);
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        adminEmailId: adminData?.id || null,
+        userEmailId,
+        userEmailSent: Boolean(userEmailId) && !userEmailError,
+        userEmailError,
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    return new Response(
+      JSON.stringify({
+        error:
+          err?.message || "Unexpected error while sending contact form email",
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
 }
 
 /** Small helper to avoid HTML injection in the email */
 function escapeHtml(input) {
-    return String(input)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+  return String(input)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 /** Renders both admin + user email bodies (text + html) with safe escaping */
 function renderContactTemplates({ fullName, email, phoneNumber, subject, description }) {
-    const safe = {
-        fullName: escapeHtml(fullName || ""),
-        email: escapeHtml(email || ""),
-        phoneNumber: escapeHtml(phoneNumber || "N/A"),
-        subject: escapeHtml(subject || ""),
-        // Keep raw for text version, convert newlines to <br/> for HTML
-        descriptionTxt: String(description || ""),
-        descriptionHtml: escapeHtml(String(description || "")).replace(/\n/g, "<br/>"),
-    };
-    const year = new Date().getFullYear();
+  const safe = {
+    fullName: escapeHtml(fullName || ""),
+    email: escapeHtml(email || ""),
+    phoneNumber: escapeHtml(phoneNumber || "N/A"),
+    subject: escapeHtml(subject || ""),
+    // Keep raw for text version, convert newlines to <br/> for HTML
+    descriptionTxt: String(description || ""),
+    descriptionHtml: escapeHtml(String(description || "")).replace(/\n/g, "<br/>"),
+  };
+  const year = new Date().getFullYear();
 
-    // --- Admin versions ---
-    const adminText =
-        `New contact form submission:\n\n` +
-        `Full Name: ${fullName}\n` +
-        `Email: ${email}\n` +
-        `Phone Number: ${phoneNumber || "N/A"}\n` +
-        `Subject: ${subject}\n\n` +
-        `Message:\n${safe.descriptionTxt}\n`;
+  // --- Admin versions ---
+  const adminText =
+    `New contact form submission:\n\n` +
+    `Full Name: ${fullName}\n` +
+    `Email: ${email}\n` +
+    `Phone Number: ${phoneNumber || "N/A"}\n` +
+    `Subject: ${subject}\n\n` +
+    `Message:\n${safe.descriptionTxt}\n`;
 
-    const adminHtml = `
+  const adminHtml = `
 <!DOCTYPE html>
 <html>
   <head>
@@ -189,14 +189,14 @@ function renderContactTemplates({ fullName, email, phoneNumber, subject, descrip
 </html>
   `.trim();
 
-    // --- User versions ---
-    const userText =
-        `Hi ${fullName},\n\n` +
-        `Thanks for contacting us. Here's a copy of your submission:\n\n` +
-        adminText +
-        `\nWe will get back to you shortly.\n\nBest regards,\nIT Bootcamp`;
+  // --- User versions ---
+  const userText =
+    `Hi ${fullName},\n\n` +
+    `Thanks for contacting us. Here's a copy of your submission:\n\n` +
+    adminText +
+    `\nWe will get back to you shortly.\n\nBest regards,\nIT Bootcamp`;
 
-    const userHtml = `
+  const userHtml = `
 <!DOCTYPE html>
 <html>
   <head>
@@ -240,8 +240,8 @@ function renderContactTemplates({ fullName, email, phoneNumber, subject, descrip
 </html>
   `.trim();
 
-    return {
-        admin: { text: adminText, html: adminHtml },
-        user: { text: userText, html: userHtml },
-    };
+  return {
+    admin: { text: adminText, html: adminHtml },
+    user: { text: userText, html: userHtml },
+  };
 }
