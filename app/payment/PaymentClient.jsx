@@ -24,7 +24,7 @@ export default function PaymentClient({ courseName, selectedCycleData }) {
         }
 
         // Redirect directly to the Stripe product link
-        window.location.href = "https://book.stripe.com/test_eVq5kE4lP162elj3Yi9R600";
+        window.location.href = "https://book.stripe.com/test_eVq8wP0Vb9eefI4f6MdEs00";
     };
 
     // For hosted Checkout, redirect occurs via session URL; keeping this for potential in-page flow.
