@@ -3,6 +3,8 @@ import { defaultContent, KV_KEY } from "@/lib/constants";
 import Header from "@/app/components/Header/Header";
 import Footer from "@/app/components/Footer/Footer";
 import FAQSection from "@/app/components/ProgramSection/FAQ";
+import JsonLd from "@/app/components/SEO/JsonLd";
+import { buildContactJsonLd } from "@/lib/jsonld";
 import ContactUsHeroSection from "./ContactUsHeroSection";
 
 export default async function ContactUs() {
@@ -19,16 +21,21 @@ export default async function ContactUs() {
     const hero = finalContent.hero || defaultContent.hero;
     const { backgroundImage, backgroundVideo } = hero || {};
 
+    const jsonLd = buildContactJsonLd(finalContent);
+
     return (
-        <main className="min-h-screen">
-            <Header />
-            <ContactUsHeroSection
-                backgroundImage={backgroundImage}
-                backgroundVideo={backgroundVideo}
-            />
-            <FAQSection />
-            <Footer />
-        </main>
+        <>
+            <JsonLd data={jsonLd} />
+            <main className="min-h-screen">
+                <Header content={finalContent} />
+                <ContactUsHeroSection
+                    backgroundImage={backgroundImage}
+                    backgroundVideo={backgroundVideo}
+                />
+                <FAQSection faq={finalContent.faq} />
+                <Footer content={finalContent} />
+            </main>
+        </>
     );
 }
 

@@ -1,6 +1,8 @@
 import { kv } from "@vercel/kv";
 import { defaultContent, KV_KEY } from "@/lib/constants";
 import EnrollToCourseClient from "./EnrollToCourseClient";
+import JsonLd from "@/app/components/SEO/JsonLd";
+import { buildEnrollJsonLd } from "@/lib/jsonld";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -23,5 +25,12 @@ export default async function EnrollToCoursePage() {
       ? dynamicCycles
       : fallbackCycles;
 
-  return <EnrollToCourseClient bootcampCycles={bootcampCycles} />;
+  const jsonLd = buildEnrollJsonLd(finalContent, bootcampCycles);
+
+  return (
+    <>
+      <JsonLd data={jsonLd} />
+      <EnrollToCourseClient bootcampCycles={bootcampCycles} />
+    </>
+  );
 }
