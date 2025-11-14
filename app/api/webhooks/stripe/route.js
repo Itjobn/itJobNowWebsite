@@ -95,17 +95,45 @@ export async function POST(req) {
       }
 
       case "payment_intent.succeeded": {
-        const pi = event.data.object;
+        let pi = event.data.object;
         console.log("➡ payment_intent.succeeded for", pi.id);
 
-        const charge =
+        // Payment intents are created by Stripe automatically when checkout completes
+        // For automatic_async, charges aren't expanded but latest_charge is available
+        let charge =
           pi.charges && pi.charges.data && pi.charges.data[0]
             ? pi.charges.data[0]
             : null;
 
+        // If charges not in payload, try using latest_charge ID
+        if (!charge && pi.latest_charge) {
+          console.log("⚠ Charges not expanded, fetching charge from latest_charge ID...");
+          try {
+            charge = await stripe.charges.retrieve(pi.latest_charge);
+          } catch (err) {
+            console.error("❌ Error fetching charge:", err.message);
+          }
+        }
+
+        // Final fallback: fetch payment intent with expanded charges
+        if (!charge) {
+          console.log("⚠ Fetching payment intent with expanded charges...");
+          try {
+            pi = await stripe.paymentIntents.retrieve(pi.id, {
+              expand: ["charges.data"],
+            });
+            charge =
+              pi.charges && pi.charges.data && pi.charges.data[0]
+                ? pi.charges.data[0]
+                : null;
+          } catch (err) {
+            console.error("❌ Error fetching payment intent:", err.message);
+          }
+        }
+
         if (!charge) {
           console.warn(
-            "⚠ payment_intent.succeeded but no charge yet — cannot build receipt"
+            "⚠ payment_intent.succeeded but no charge available — cannot build receipt"
           );
           break;
         }
