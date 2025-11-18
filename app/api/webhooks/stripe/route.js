@@ -255,11 +255,13 @@ export async function POST(req) {
           console.log("✅ email sent to", customerEmail);
         }
 
+        // Get admin email from content (editable in admin panel) or fallback to env vars
         const adminEmail =
+          brand?.adminEmail?.trim() ||
           process.env.ADMIN_ENROLLMENT_EMAIL ||
           process.env.ADMIN_NOTIFICATION_EMAIL ||
           process.env.ADMIN_EMAIL ||
-          supportEmail;
+          null;
 
         if (adminEmail) {
           const adminDefaults =

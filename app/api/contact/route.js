@@ -1,10 +1,12 @@
 "use server";
 
 import { Resend } from "resend";
+import { kv } from "@vercel/kv";
+import { defaultContent, KV_KEY } from "@/lib/constants";
 
 // Next.js App Router API Route (app/api/contact/route.js)
 // Accepts JSON { fullName, email, phoneNumber, subject, description }
-// Sends an email via Resend to CONTACT_TO/EMAIL_FROM (plus a hardcoded admin inbox)
+// Sends an email via Resend to admin email (configurable from admin panel)
 
 export async function POST(request) {
   try {
@@ -35,16 +37,32 @@ export async function POST(request) {
 
     const resend = new Resend(resendApiKey);
 
-    // From: If EMAIL_FROM is not set, use Resend test domain for dev
-    const fromAddress = process.env.EMAIL_FROM?.trim() || "onboarding@resend.dev";
+    // Get admin email from content (editable in admin panel) or fallback to env vars
+    let siteContent = defaultContent;
+    try {
+      if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+        const content = await kv.get(KV_KEY);
+        if (content) siteContent = content;
+      }
+    } catch (error) {
+      console.error("❌ KV content fetch error:", error);
+    }
 
-    // Always send to the main recipient inbox
-    const adminAddress = "itjobn@gmail.com";
-    // Additionally allow env-configured recipients (optional)
-    const optionalRecipient1 = process.env.CONTACT_TO?.trim();
-    const optionalRecipient2 = process.env.EMAIL_FROM?.trim();
+    const brand = siteContent?.emailTemplates?.brand || defaultContent.emailTemplates.brand;
+
+    // From: If EMAIL_FROM is not set, use Resend test domain for dev
+    const fromAddress = process.env.EMAIL_FROM?.trim() || brand?.fromEmail?.trim() || "onboarding@resend.dev";
+
+    // Get admin email from admin panel settings (primary) or environment variables (fallback)
+    const adminAddress =
+      brand?.adminEmail?.trim() ||
+      process.env.CONTACT_TO?.trim() ||
+      process.env.ADMIN_EMAIL?.trim() ||
+      "itjobn@gmail.com"; // Final fallback
+
+    // Build unique recipient list
     const adminRecipients = Array.from(
-      new Set([adminAddress, optionalRecipient1, optionalRecipient2].filter(Boolean))
+      new Set([adminAddress].filter(Boolean))
     );
 
     const emailSubject = subject || "New Contact Form Submission";

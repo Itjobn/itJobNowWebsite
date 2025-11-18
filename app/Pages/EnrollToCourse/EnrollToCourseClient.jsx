@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { IoIosCheckmarkCircleOutline } from "react-icons/io";
 
@@ -20,19 +20,13 @@ export default function EnrollToCourseClient({ bootcampCycles = [] }) {
         startDate: cycle?.startDate ?? "",
         endDate: cycle?.endDate ?? "",
         duration: cycle?.duration ?? "",
+        ctaText: cycle?.ctaText ?? "Select Cycle",
       }))
       .filter((cycle) => cycle.id || cycle.title);
   }, [bootcampCycles]);
 
-  const [selectedCycle, setSelectedCycle] = useState(() => cycles[0]?.id || "");
-
-  useEffect(() => {
-    setSelectedCycle(cycles[0]?.id || "");
-  }, [cycles]);
-
   const handleSelectCycle = (cycleId) => {
     if (!cycleId) return;
-    setSelectedCycle(cycleId);
     router.push(`/payment?cycle=${cycleId}`);
   };
 
@@ -85,13 +79,9 @@ export default function EnrollToCourseClient({ bootcampCycles = [] }) {
                   {/* Selection Button */}
                   <button
                     onClick={() => handleSelectCycle(cycle.id)}
-                    className={`w-full py-3 rounded-lg font-semibold mb-6 transition-colors ${
-                      selectedCycle === cycle.id
-                        ? "bg-primary text-white"
-                        : "bg-gray-300 text-white border border-gray-400"
-                    }`}
+                    className="w-full py-3 rounded-lg font-semibold mb-6 transition-colors bg-primary text-white hover:bg-primary/90"
                   >
-                    {selectedCycle === cycle.id ? "Selected" : "Select Cycle"}
+                    {cycle.ctaText || "Select Cycle"}
                   </button>
 
                   {/* Details */}

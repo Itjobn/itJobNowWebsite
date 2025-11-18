@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { IoIosCheckmarkCircleOutline } from "react-icons/io";
@@ -25,10 +24,8 @@ export default function ProgramOverview({
   content,
 }) {
   const router = useRouter();
-  const [selectedCycle, setSelectedCycle] = useState("current");
 
   const handleSelectCycle = (cycleId) => {
-    setSelectedCycle(cycleId);
     router.push(`/payment?cycle=${cycleId}`);
   };
 
@@ -272,10 +269,7 @@ export default function ProgramOverview({
                     {/* Selection Button */}
                     <button
                       onClick={() => handleSelectCycle(cycleId)}
-                      className={`w-full py-3 rounded-lg font-semibold mb-6 transition-colors ${selectedCycle === cycleId
-                        ? "bg-primary text-white"
-                        : "bg-gray-300 text-white border border-gray-400"
-                        }`}
+                      className="w-full py-3 rounded-lg font-semibold mb-6 transition-colors bg-primary text-white hover:bg-primary/90"
                     >
                       {buttonLabel}
                     </button>

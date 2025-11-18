@@ -118,6 +118,7 @@ function normalizeContent(data) {
           endDate: c?.endDate ?? fallbackCycle.endDate ?? "",
           duration: c?.duration ?? fallbackCycle.duration ?? "",
           ctaText: c?.ctaText ?? fallbackCycle.ctaText ?? "",
+          stripeLink: c?.stripeLink ?? fallbackCycle.stripeLink ?? "",
         };
       })
       : defaultContent.programOverview.bootcampCycles,
@@ -2048,6 +2049,7 @@ export default function AdminPage() {
                                     endDate: "",
                                     duration: "",
                                     ctaText: "",
+                                    stripeLink: "",
                                   },
                                 ],
                               },
@@ -2168,6 +2170,26 @@ export default function AdminPage() {
                                 })
                               }
                             />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium">Stripe Payment Link</label>
+                            <input
+                              className="border rounded px-3 py-2 w-full text-sm"
+                              placeholder="https://book.stripe.com/..."
+                              value={c?.stripeLink || ""}
+                              onChange={(e) =>
+                                setContent((prev) => {
+                                  const next = Array.isArray(prev.programOverview?.bootcampCycles)
+                                    ? [...prev.programOverview.bootcampCycles]
+                                    : [];
+                                  next[index] = { ...next[index], stripeLink: e.target.value };
+                                  return { ...prev, programOverview: { ...prev.programOverview, bootcampCycles: next } };
+                                })
+                              }
+                            />
+                            <p className="text-xs text-slate-500 mt-1">
+                              Stripe payment link for this cycle. Users will be redirected here after filling the payment form.
+                            </p>
                           </div>
                           <div className="grid gap-2 md:grid-cols-2">
                             <input
@@ -2678,6 +2700,18 @@ export default function AdminPage() {
                         />
                         <p className="mt-1 text-xs text-slate-500">
                           If blank, the app will use the `EMAIL_FROM` environment variable or Resend test domain.
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700">Admin Notification Email</label>
+                        <input
+                          className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                          value={emailBrand.adminEmail || ""}
+                          onChange={(e) => updateEmailBrand("adminEmail", e.target.value)}
+                          placeholder="admin@example.com"
+                        />
+                        <p className="mt-1 text-xs text-slate-500">
+                          Email address to receive enrollment notifications. If blank, falls back to environment variable ADMIN_ENROLLMENT_EMAIL.
                         </p>
                       </div>
                     </div>

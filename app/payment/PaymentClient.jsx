@@ -23,8 +23,17 @@ export default function PaymentClient({ courseName, selectedCycleData }) {
             return;
         }
 
-        // Redirect directly to the Stripe product link
-        window.location.href = "https://book.stripe.com/test_eVq8wP0Vb9eefI4f6MdEs00";
+        // Get the Stripe payment link for the selected cycle
+        const stripeLink = selectedCycleData?.stripeLink?.trim();
+
+        if (!stripeLink) {
+            alert("Payment link not configured for this cycle. Please contact support or try another cycle.");
+            console.error("No Stripe link configured for cycle:", selectedCycleData);
+            return;
+        }
+
+        // Redirect to the cycle-specific Stripe payment link
+        window.location.href = stripeLink;
     };
 
     // For hosted Checkout, redirect occurs via session URL; keeping this for potential in-page flow.
